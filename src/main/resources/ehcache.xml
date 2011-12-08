@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ehcache updateCheck="false" monitoring="autodetect" dynamicConfig="true"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd">
+
+    <cache name="reflectionCache" maxElementsInMemory="0" overflowToDisk="false" eternal="true"/>
+
+</ehcache>
