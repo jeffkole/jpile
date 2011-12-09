@@ -36,7 +36,22 @@ import static com.google.common.collect.Maps.*;
 import static com.google.common.collect.Sets.*;
 
 /**
- * Save any type of data using a collection of SingleInfileObjectLoaders
+ * Save any type of data using a collection of SingleInfileObjectLoaders. A common use case would be to do something like
+ *
+ * <pre>
+ *     Connection connection = ...
+ *     HierarchicalInfileObjectLoader objectLoader = new HierarchicalInfileObjectLoader();
+ *     objectLoader.setConnection(connection);
+ *     try {
+ *         objectLoader.persist(foo, bar);
+ *     } finally {
+ *         objectLoader.close();
+ *         connection.close();
+ *     }
+ * </pre>
+ * Note that because the connection is passed in, it is up to the caller to close the connection correctly. Otherwise the
+ * connection will never be closed.
+ *
  *
  * @author amir.raminfar
  * @since 1.0
