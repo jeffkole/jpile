@@ -2,6 +2,7 @@ package com.opower.persistence.jpile.sample;
 
 import java.util.Date;
 import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -33,7 +34,7 @@ public class Customer {
         this.id = id;
     }
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
     public List<Product> getProducts() {
         return products;
     }
@@ -45,7 +46,7 @@ public class Customer {
         this.products = products;
     }
 
-    @OneToOne
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     public Contact getContact() {
         return contact;

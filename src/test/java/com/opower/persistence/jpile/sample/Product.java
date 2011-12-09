@@ -26,7 +26,7 @@ public class Product {
 
 
     @ManyToOne
-    @JoinColumn(name = "customer_id", insertable = false, updatable = false)
+    @JoinColumn(name = "customer_id")
     public Customer getCustomer() {
         return customer;
     }
@@ -39,6 +39,10 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     @Column(name = "purchased_on")

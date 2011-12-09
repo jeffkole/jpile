@@ -4,14 +4,22 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
-import com.google.common.io.Closeables;
+import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.opower.persistence.jpile.AbstractIntTestForJPile;
+import com.opower.persistence.jpile.sample.Contact;
 import com.opower.persistence.jpile.sample.Customer;
 import com.opower.persistence.jpile.sample.ObjectFactory;
 import com.opower.persistence.jpile.sample.Product;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.test.annotation.IfProfileValue;
+
+import static junit.framework.Assert.assertEquals;
 
 /**
  * @author amir.raminfar
@@ -23,7 +31,7 @@ public class IntPerformanceHierarchicalInfileObjectLoaderTest extends AbstractIn
             = "insert into product (customer_id, purchased_on, title, description, price) values (?, ?, ?, ?, ?)";
     private static final String CONTACT_SQL = "insert into contact (customer_id, first_name, last_name) values (?, ?, ?)";
     private static final String CONTACT_PHONE_SQL = "insert contact_phone (customer_id, phone) values (?, ?)";
-    private static final int CUSTOMER_TO_GENERATE = 20000;
+    private static final int CUSTOMER_TO_GENERATE = 25000;
 
     Customer[] customers;
 
@@ -35,65 +43,92 @@ public class IntPerformanceHierarchicalInfileObjectLoaderTest extends AbstractIn
         }
     }
 
+    @After
+    public void assertNumberOfCustomer() {
+        assertEquals(CUSTOMER_TO_GENERATE, simpleJdbcTemplate.queryForInt("select count(*) from customer"));
+    }
+
     @Test
     public void testWithPreparedStatement() throws SQLException {
-        PreparedStatement customer = connection.prepareStatement(CUSTOMER_SQL);
-        PreparedStatement product = connection.prepareStatement(PRODUCT_SQL);
-        PreparedStatement contact = connection.prepareStatement(CONTACT_SQL);
-        PreparedStatement phone = connection.prepareStatement(CONTACT_PHONE_SQL);
+        final PreparedStatement customer = connection.prepareStatement(CUSTOMER_SQL);
+        final PreparedStatement product = connection.prepareStatement(PRODUCT_SQL);
+        final PreparedStatement contact = connection.prepareStatement(CONTACT_SQL);
+        final PreparedStatement phone = connection.prepareStatement(CONTACT_PHONE_SQL);
 
-        long start = System.nanoTime();
-        for(long i = 0, customersLength = customers.length; i < customersLength; i++) {
-            Customer c = customers[((int) i)];
-            c.setId(i + 1);
+        doWithInTimedBlock(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for(long i = 0, customersLength = customers.length; i < customersLength; i++) {
+                        Customer c = customers[((int) i)];
+                        c.setId(i + 1);
 
-            customer.clearParameters();
-            product.clearParameters();
-            contact.clearParameters();
-            phone.clearParameters();
+                        customer.clearParameters();
+                        product.clearParameters();
+                        contact.clearParameters();
+                        phone.clearParameters();
 
-            writeCustomer(customer, c);
-            customer.executeUpdate();
+                        writeCustomer(customer, c);
+                        customer.executeUpdate();
 
-            for(Product p : c.getProducts()) {
-                writeProduct(product, c, p);
-                product.executeUpdate();
+                        for(Product p : c.getProducts()) {
+                            writeProduct(product, c, p);
+                            product.executeUpdate();
+                        }
+
+                        writeContact(contact, c);
+                        contact.executeUpdate();
+
+                        writeContactPhone(phone, c);
+                        phone.executeUpdate();
+                    }
+                }
+                catch(SQLException e) {
+                    throw Throwables.propagate(e);
+                }
             }
+        }, "Prepared Statements");
 
-            writeContact(contact, c);
-            contact.executeUpdate();
-
-            writeContactPhone(phone, c);
-            phone.executeUpdate();
-        }
         customer.close();
         product.close();
         contact.close();
         phone.close();
-        long elapsed = System.nanoTime() - start;
 
-        System.out.printf("Total time to save %d customers was %d seconds with prepared statements.%n",
-                          CUSTOMER_TO_GENERATE, 
-                          TimeUnit.NANOSECONDS.toSeconds(elapsed));
-        System.out.printf("Throughput for prepared statements was %d objects/second%n",
-                          CUSTOMER_TO_GENERATE / TimeUnit.NANOSECONDS.toSeconds(elapsed));
     }
-    
+
+
+    @Test
+    public void testWithHibernate() {
+        final SessionFactory sessionFactory = new Configuration().configure()
+                                                                 .addAnnotatedClass(Customer.class)
+                                                                 .addAnnotatedClass(Contact.class)
+                                                                 .addAnnotatedClass(Product.class)
+                                                                 .buildSessionFactory();
+
+
+        doWithInTimedBlock(new Runnable() {
+            public void run() {
+                Session session = sessionFactory.openSession();
+                session.beginTransaction();
+                for(Customer customer : customers) {
+                    session.save(customer);
+                }
+                session.flush();
+                session.getTransaction().commit();
+                session.close();
+            }
+        }, "Hibernate");
+    }
+
     @Test
     public void testWithJPile() {
-        long start = System.nanoTime();
-
-        Customer firstOne = ObjectFactory.newCustomer();
-        hierarchicalInfileObjectLoader.persist(firstOne, customers);
-        hierarchicalInfileObjectLoader.flush();
-        
-        long elapsed = System.nanoTime() - start;
-        System.out.printf("Total time to save %d customers was %d seconds with jPile.%n",
-                          CUSTOMER_TO_GENERATE,
-                          TimeUnit.NANOSECONDS.toSeconds(elapsed));
-        System.out.printf("Throughput for jPile was %d objects/second%n",
-                          CUSTOMER_TO_GENERATE / TimeUnit.NANOSECONDS.toSeconds(elapsed));
-
+        doWithInTimedBlock(new Runnable() {
+            @Override
+            public void run() {
+                hierarchicalInfileObjectLoader.persist(customers[0], (Object[])customers);
+                hierarchicalInfileObjectLoader.flush();
+            }
+        }, "jPile");
     }
 
     private void writeContactPhone(PreparedStatement phone, Customer c) throws SQLException {
@@ -117,5 +152,21 @@ public class IntPerformanceHierarchicalInfileObjectLoaderTest extends AbstractIn
 
     private void writeCustomer(PreparedStatement customer, Customer c) throws SQLException {
         customer.setDate(1, new Date(c.getLastSeenOn().getTime()));
+    }
+
+    private void doWithInTimedBlock(Runnable runnable, String name) {
+        long start = System.nanoTime();
+        runnable.run();
+        long elapsed = System.nanoTime() - start;
+        System.out.println(Strings.repeat("=", 100));
+        System.out.printf("Total time to save %d customers was %d seconds with %s.%n",
+                          CUSTOMER_TO_GENERATE,
+                          TimeUnit.NANOSECONDS.toSeconds(elapsed),
+                          name);
+        System.out.printf("Throughput for %s was %d objects/second%n",
+                          name,
+                          CUSTOMER_TO_GENERATE / TimeUnit.NANOSECONDS.toSeconds(elapsed));
+        System.out.println(Strings.repeat("=", 100));
+        System.out.println();
     }
 }
