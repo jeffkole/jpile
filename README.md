@@ -5,6 +5,7 @@ A project developed at opower that uses `javax.persistence` annotations to load 
 The status of the project is still beta.
 
 **What are annotations are supported?**
+
 The following annotations are supported:
 
 * @Table
@@ -21,15 +22,19 @@ The following annotations are supported:
 * @GeneratedValue
 
 **How does jPile handle ids?**
+
 jPile cannot rely on MySQL `auto_generated` option. Typical database operation saves a new row and fetches the last auto generated id.  This is not possible when flushing an infile stream to the database. Instead jPile tries to generate its own auto generated ids for any column defintion that has `@GeneratedValue(strategy = GenerationType.AUTO)`. 
 
 **How do I run the tests?**
+
 jPile needs a local MySQL running and Apache Maven. Create a new schema called 'jpile' and import the sql file located at `src/test/db/jpile.sql`. The test classes use `root` with no password to login. After creating the local database, you should be able to run `mvn clean install` to run all the tests and install locally. 
 
 **What do I do if I find a bug?**
+
 The project is still under development. One of the reasons we decided to go open source was so that other people could improve this project. If you find any bugs, please create a new issue or contact the lead developer on the project. 
 
 **How do I use jPile?**
+
 jPile is very to use. If you are using Maven, then add the following dependency:
 
 ```
@@ -58,6 +63,7 @@ try {
 ```
 
 **What license is jPile released under?**
+
 jPile is released on the MIT license which is available in `license.txt` to read. 
 
 
