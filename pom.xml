@@ -45,6 +45,11 @@
             <email>s-m@opower.com</email>
             <organization>opower</organization>
         </developer>
+        <developer>
+            <name>Matt Betzel</name>
+            <email>matt.betzel@opower.com</email>
+            <organization>opower</organization>
+        </developer>
     </developers>
 
     <properties>

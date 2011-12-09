@@ -6,7 +6,7 @@ The status of the project is still beta.
 
 
 
-**What are annotations are supported?**
+**What annotations are supported?**
 
 The following annotations are supported:
 
@@ -49,7 +49,7 @@ jPile is very easy to use. If you are using Maven, then add the following depend
 
 ```
 <dependency>
-    <groupId>com.opower.jpile</groupId>
+    <groupId>com.opower.persistence</groupId>
     <artifactId>jpile</artifactId>
     <version>1.0-SNAPSHOT</version>
 </dependency>
