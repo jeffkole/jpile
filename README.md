@@ -75,6 +75,7 @@ jPile is released on the MIT license which is available in `license.txt` to read
 * Hibernate         ,  40s                     
 * jPile             ,  6s
 
-The chart is at http://cloud.github.com/downloads/opower/jpile/performance-graph.png. 
+There is a chart is at http://cloud.github.com/downloads/opower/jpile/performance-graph.png. 
+
 ![Performance](http://cloud.github.com/downloads/opower/jpile/performance-graph.png)
 
