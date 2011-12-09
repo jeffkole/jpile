@@ -4,6 +4,12 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
     <name>jPile - Java Persistence Infile LoadEr</name>
     <description>
         jPile implements javax.persistence annotations. The primary use for this library is to write massive
@@ -23,8 +29,9 @@
     </licenses>
 
     <scm>
-        <url>https://github.com/opower/jpile</url>
-        <connection>git://github.com/opower/jpile.git</connection>
+        <url>git@github.com:opower/jpile.git</url>
+        <connection>scm:git@github.com:opower/jpile.git</connection>
+        <developerConnection>scm:git@github.com:opower/jpile.git</developerConnection>
     </scm>
 
     <developers>
