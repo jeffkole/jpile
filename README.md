@@ -67,4 +67,14 @@ try {
 jPile is released on the MIT license which is available in `license.txt` to read. 
 
 
+**How was the performance comparison done?**
+
+25,000 fake objects were created. Each object has a Customer, Contact (One-to-one) and 4 Producs (One-to-many). All these objects were saved using simple MySQL preppared statements, Hibernate, and jPile. The results were as follows:
+
+* Prepared Statments,  60s
+* Hibernate         ,  40s                     
+* jPile             ,  6s
+
+The chart is at http://cloud.github.com/downloads/opower/jpile/performance-graph.png. 
+![Performance](http://cloud.github.com/downloads/opower/jpile/performance-graph.png)
 
